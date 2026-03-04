@@ -1,0 +1,212 @@
+@import "tailwindcss";
+
+@theme {
+  --color-xray-bg: #000000;
+  --color-xray-panel: transparent;
+  --color-xray-panel-border: rgba(207, 250, 254, 0.2);
+  --color-xray-cyan: #cffafe;
+  --color-xray-cyan-glow: rgba(207, 250, 254, 0.8);
+  --color-xray-green: #dcfce7;
+  --color-xray-green-glow: rgba(220, 252, 231, 0.8);
+  --color-xray-text: rgba(255, 255, 255, 0.9);
+  --color-xray-text-muted: rgba(207, 250, 254, 0.4);
+}
+
+@layer base {
+  body {
+    @apply bg-xray-bg text-xray-text antialiased min-h-screen font-light tracking-wide;
+    text-shadow: 0 0 6px rgba(207, 250, 254, 0.5);
+  }
+
+  /* Blurry medical scanner overlay */
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: repeating-linear-gradient(0deg,
+        rgba(0, 0, 0, 0.3),
+        rgba(0, 0, 0, 0.3) 1px,
+        transparent 1px,
+        transparent 3px);
+    pointer-events: none;
+    z-index: 50;
+    mix-blend-mode: multiply;
+  }
+}
+
+@layer components {
+  .xray-panel {
+    @apply bg-transparent border border-xray-panel-border rounded-3xl relative backdrop-blur-md;
+    /* Soft bone-like glowing interior and shadow */
+    box-shadow: 0 0 30px rgba(207, 250, 254, 0.03), inset 0 0 40px rgba(207, 250, 254, 0.06);
+  }
+
+  .xray-film {
+    @apply relative bg-gradient-to-br from-[#020617] to-[#0f172a] border border-xray-panel-border rounded-xl transition-all duration-500 overflow-hidden;
+    box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.7), 0 0 15px -3px rgba(207, 250, 254, 0.1);
+    z-index: 10;
+  }
+
+  .xray-film-static {
+    @apply relative bg-gradient-to-br from-[#020617] to-[#0f172a] border border-xray-panel-border rounded-xl transition-all duration-500;
+    box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.7), 0 0 15px -3px rgba(207, 250, 254, 0.1);
+    z-index: 10;
+  }
+
+  /* The actual sliding lightbox panel */
+  .xray-film::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    width: 200%;
+    background: linear-gradient(90deg,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(207, 250, 254, 0.6) 30%,
+        rgba(255, 255, 255, 0.95) 50%,
+        rgba(207, 250, 254, 0.8) 70%,
+        rgba(255, 255, 255, 0) 100%);
+    z-index: 0;
+    transform: translateX(-150%) skewX(-15deg);
+    transition: transform 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+    pointer-events: none;
+    mix-blend-mode: overlay;
+  }
+
+  .xray-film:hover::before {
+    transform: translateX(-25%) skewX(-15deg);
+  }
+
+  /* The Lightbox turning on behind the film on hover */
+  .xray-film:hover {
+    box-shadow:
+      0 20px 40px -5px rgba(0, 0, 0, 0.9),
+      /* Deep shadow */
+      0 0 100px 20px rgba(34, 211, 238, 0.5),
+      /* Massive cyan backlight */
+      inset 0 0 50px 10px rgba(207, 250, 254, 0.3);
+    /* Bright inner bleed */
+    border-color: rgba(207, 250, 254, 1);
+    transform: translateY(-4px) scale(1.02);
+    z-index: 20;
+  }
+
+  /* Physical metallic/plastic clip holding the film at the top center */
+  .xray-film-clip {
+    content: "";
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 44px;
+    height: 16px;
+    background: linear-gradient(to bottom, #475569, #0f172a);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.9), inset 0 2px 4px rgba(255, 255, 255, 0.1);
+    z-index: 30;
+    transition: all 0.5s;
+  }
+
+  .xray-film:hover .xray-film-clip {
+    border-color: rgba(207, 250, 254, 0.8);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.9), inset 0 2px 6px rgba(255, 255, 255, 0.4);
+    background: linear-gradient(to bottom, #64748b, #1e293b);
+  }
+
+  /* A slight inner reflection on the film */
+  .xray-film::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, transparent 40%);
+    pointer-events: none;
+    transition: all 0.5s;
+    z-index: 5;
+  }
+
+  .xray-film:hover::after {
+    background: linear-gradient(135deg, rgba(207, 250, 254, 0.2) 0%, transparent 60%);
+  }
+
+  /* Text and Icon glow effects triggered when the film is hovered */
+  .xray-film-text {
+    transition: all 0.3s ease;
+    will-change: text-shadow;
+    transform: translateZ(0);
+    /* Force hardware accel for smooth shadows */
+  }
+
+  .xray-film-icon {
+    transition: all 0.3s ease;
+    will-change: filter;
+    transform: translateZ(0);
+    /* Force hardware accel for smooth filters */
+  }
+
+  .xray-film:hover .xray-film-text {
+    text-shadow:
+      0 0 15px rgba(34, 211, 238, 0.4),
+      0 0 30px rgba(34, 211, 238, 0.2);
+    color: #ffffff;
+  }
+
+  .xray-film:hover .xray-film-icon {
+    filter: drop-shadow(0 0 12px rgba(34, 211, 238, 0.6));
+    color: var(--color-xray-cyan);
+  }
+
+  /* Inline editing inputs mimicking the text display */
+  .xray-inline-input {
+    @apply w-full bg-transparent border-b border-xray-cyan/30 text-white focus:outline-none focus:border-xray-cyan transition-colors pb-1;
+    box-shadow: none;
+  }
+
+  .xray-inline-textarea {
+    @apply w-full bg-transparent border-b border-xray-cyan/30 text-xray-text-muted focus:outline-none focus:border-xray-cyan transition-colors resize-y min-h-[40px] mt-1 pb-1;
+    box-shadow: none;
+  }
+
+  .xray-inline-input {
+    @apply w-full bg-transparent border-b border-xray-cyan/30 text-white focus:outline-none focus:border-xray-cyan transition-colors pb-1;
+    box-shadow: none;
+  }
+
+  .xray-input {
+    @apply bg-transparent border-b border-xray-panel-border text-xray-text rounded-none px-4 py-2 focus:outline-none focus:border-xray-cyan transition-all duration-500 placeholder:text-xray-text-muted/30;
+    box-shadow: inset 0 -10px 20px -20px var(--color-xray-cyan-glow);
+  }
+
+  .xray-btn-primary {
+    @apply px-5 py-2 rounded-full font-light tracking-widest text-xs transition-all duration-500 flex items-center justify-center gap-2 bg-transparent text-xray-cyan border border-xray-panel-border hover:border-xray-cyan;
+    text-shadow: 0 0 8px var(--color-xray-cyan-glow);
+    box-shadow: 0 0 20px rgba(207, 250, 254, 0.05), inset 0 0 15px rgba(207, 250, 254, 0.05);
+  }
+
+  .xray-btn-primary:hover {
+    box-shadow: 0 0 30px rgba(207, 250, 254, 0.15), inset 0 0 25px rgba(207, 250, 254, 0.15);
+  }
+
+  .xray-btn-success {
+    @apply px-5 py-2 rounded-full font-light tracking-widest text-xs transition-all duration-500 flex items-center justify-center gap-2 bg-transparent text-xray-green border border-xray-panel-border hover:border-xray-green;
+    text-shadow: 0 0 8px var(--color-xray-green-glow);
+    box-shadow: 0 0 20px rgba(220, 252, 231, 0.05), inset 0 0 15px rgba(220, 252, 231, 0.05);
+  }
+
+  .xray-btn-success:hover {
+    box-shadow: 0 0 30px rgba(220, 252, 231, 0.15), inset 0 0 25px rgba(220, 252, 231, 0.15);
+  }
+
+  .xray-btn-danger {
+    @apply px-5 py-2 rounded-full font-light tracking-widest text-xs transition-all duration-500 flex items-center justify-center gap-2 bg-transparent text-red-300 border border-red-500/20 hover:border-red-400;
+    text-shadow: 0 0 8px rgba(252, 165, 165, 0.8);
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.05), inset 0 0 15px rgba(239, 68, 68, 0.05);
+  }
+
+  .xray-btn-danger:hover {
+    box-shadow: 0 0 30px rgba(239, 68, 68, 0.15), inset 0 0 25px rgba(239, 68, 68, 0.15);
+  }
+}
