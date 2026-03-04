@@ -8,14 +8,14 @@
   --color-xray-cyan-glow: rgba(207, 250, 254, 0.8);
   --color-xray-green: #dcfce7;
   --color-xray-green-glow: rgba(220, 252, 231, 0.8);
-  --color-xray-text: rgba(255, 255, 255, 0.9);
-  --color-xray-text-muted: rgba(207, 250, 254, 0.4);
+  --color-xray-text: rgba(255, 255, 255, 1);
+  --color-xray-text-muted: rgba(207, 250, 254, 0.6);
 }
 
 @layer base {
   body {
     @apply bg-xray-bg text-xray-text antialiased min-h-screen font-light tracking-wide;
-    text-shadow: 0 0 6px rgba(207, 250, 254, 0.5);
+    text-shadow: 0 0 10px rgba(207, 250, 254, 0.4);
   }
 
   /* Blurry medical scanner overlay */
@@ -45,9 +45,14 @@
   }
 
   .xray-film {
-    @apply relative bg-gradient-to-br from-[#020617] to-[#0f172a] border border-xray-panel-border rounded-xl transition-all duration-500 overflow-hidden;
+    @apply relative bg-gradient-to-br from-[#020617] to-[#0f172a] border border-xray-panel-border rounded-xl transition-all duration-500;
     box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.7), 0 0 15px -3px rgba(207, 250, 254, 0.1);
     z-index: 10;
+  }
+
+  .xray-film-inner {
+    @apply absolute inset-0 overflow-hidden rounded-xl pointer-events-none;
+    z-index: 0;
   }
 
   .xray-film-static {
@@ -57,16 +62,16 @@
   }
 
   /* The actual sliding lightbox panel */
-  .xray-film::before {
+  .xray-film-inner::before {
     content: "";
     position: absolute;
     inset: 0;
     width: 200%;
     background: linear-gradient(90deg,
         rgba(255, 255, 255, 0) 0%,
-        rgba(207, 250, 254, 0.6) 30%,
-        rgba(255, 255, 255, 0.95) 50%,
-        rgba(207, 250, 254, 0.8) 70%,
+        rgba(34, 211, 238, 0.4) 30%,
+        rgba(186, 242, 248, 0.7) 50%,
+        rgba(34, 211, 238, 0.4) 70%,
         rgba(255, 255, 255, 0) 100%);
     z-index: 0;
     transform: translateX(-150%) skewX(-15deg);
@@ -75,7 +80,7 @@
     mix-blend-mode: overlay;
   }
 
-  .xray-film:hover::before {
+  .xray-film:hover .xray-film-inner::before {
     transform: translateX(-25%) skewX(-15deg);
   }
 
@@ -137,6 +142,7 @@
     transition: all 0.3s ease;
     will-change: text-shadow;
     transform: translateZ(0);
+    text-shadow: 0 0 4px rgba(207, 250, 254, 0.2);
     /* Force hardware accel for smooth shadows */
   }
 
@@ -144,19 +150,24 @@
     transition: all 0.3s ease;
     will-change: filter;
     transform: translateZ(0);
+    opacity: 0.8;
     /* Force hardware accel for smooth filters */
   }
 
   .xray-film:hover .xray-film-text {
     text-shadow:
-      0 0 15px rgba(34, 211, 238, 0.4),
-      0 0 30px rgba(34, 211, 238, 0.2);
+      0 0 2px rgba(0, 0, 0, 1),
+      0 0 5px rgba(0, 0, 0, 0.8),
+      0 0 15px rgba(34, 211, 238, 0.6),
+      0 0 30px rgba(34, 211, 238, 0.4);
     color: #ffffff;
   }
 
   .xray-film:hover .xray-film-icon {
-    filter: drop-shadow(0 0 12px rgba(34, 211, 238, 0.6));
-    color: var(--color-xray-cyan);
+    filter:
+      drop-shadow(0 0 2px rgba(0, 0, 0, 1)) drop-shadow(0 0 12px rgba(34, 211, 238, 0.8));
+    color: #ffffff;
+    opacity: 1;
   }
 
   /* Inline editing inputs mimicking the text display */
@@ -171,7 +182,7 @@
   }
 
   .xray-inline-input {
-    @apply w-full bg-transparent border-b border-xray-cyan/30 text-white focus:outline-none focus:border-xray-cyan transition-colors pb-1;
+    @apply w-full bg-transparent border-b border-xray-cyan/40 text-white focus:outline-none focus:border-xray-cyan transition-colors pb-1;
     box-shadow: none;
   }
 

@@ -40,6 +40,7 @@ export const TodoForm: React.FC<TodoFormProps> = ({ task, isInline = false, onSu
             className={`xray-film p-5 pt-8 flex items-center gap-4 ${isInline ? 'w-full' : 'w-full max-w-md mx-auto mt-4'}`}
         >
             <div className="xray-film-clip"></div>
+            <div className="xray-film-inner"></div>
 
             {/* Placeholder for the checkbox to keep layout identical to TodoItem */}
             <div className="w-6 h-6 rounded border flex items-center justify-center shrink-0 transition-all z-10 relative border-xray-text-muted/30 bg-black/30" />

@@ -45,9 +45,12 @@ export const TodoItem: React.FC<TodoItemProps> = ({ task, onToggleStatus, onDele
     }
 
     return (
-        <div className={`xray-film p-5 pt-8 flex items-center gap-4 ${task.isCompleted ? 'opacity-60 grayscale hover:grayscale-0' : ''}`}>
+        <div className={`xray-film p-5 pt-8 flex items-center gap-4 ${task.isCompleted ? 'opacity-70 grayscale hover:grayscale-0' : ''}`}>
             {/* The physical clip holding the film */}
             <div className="xray-film-clip"></div>
+
+            {/* The inner containment for the overflow-hidden animations */}
+            <div className="xray-film-inner"></div>
 
             <button
                 onClick={handleToggle}
