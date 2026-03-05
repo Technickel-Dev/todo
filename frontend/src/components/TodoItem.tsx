@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import type { Todo } from '../types';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCheck, faTrash, faEdit } from '@fortawesome/free-solid-svg-icons';
+import { faCheck, faTrash, faEdit, faEye } from '@fortawesome/free-solid-svg-icons';
+import { Link } from 'react-router-dom';
 import { TodoForm } from './TodoForm';
 
 interface TodoItemProps {
@@ -76,6 +77,13 @@ export const TodoItem: React.FC<TodoItemProps> = ({ todo, onToggleStatus, onDele
             </div>
 
             <div className="flex items-center gap-2 shrink-0 z-10 relative">
+                <Link
+                    to={`/todos/${todo.id}`}
+                    className="p-2 text-xray-text-muted hover:text-white transition-colors xray-film-icon cursor-pointer"
+                    title="View Details"
+                >
+                    <FontAwesomeIcon icon={faEye} />
+                </Link>
                 <button
                     onClick={() => setIsEditing(true)}
                     className="p-2 text-xray-text-muted hover:text-xray-cyan transition-colors xray-film-icon cursor-pointer"

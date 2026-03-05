@@ -10,9 +10,33 @@ import { faExclamationCircle } from '@fortawesome/free-solid-svg-icons';
 export const Dashboard = () => {
     const [todos, setTodos] = useState<Todo[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
     const [filterType, setFilterType] = useState<'all' | 'active' | 'completed'>('all');
     const [isLoading, setIsLoading] = useState(true);
+    const [showLoading, setShowLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    // Debounce search term
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedSearchTerm(searchTerm);
+        }, 300);
+
+        return () => {
+            clearTimeout(handler);
+        };
+    }, [searchTerm]);
+
+    // Prevent loading flicker on fast networks
+    useEffect(() => {
+        let timer: ReturnType<typeof setTimeout>;
+        if (isLoading) {
+            timer = setTimeout(() => setShowLoading(true), 250);
+        } else {
+            setShowLoading(false);
+        }
+        return () => clearTimeout(timer);
+    }, [isLoading]);
 
     // Form state
     const [isFormOpen, setIsFormOpen] = useState(false);
@@ -23,14 +47,14 @@ export const Dashboard = () => {
         setError(null);
         try {
             const isCompletedParam = filterType === 'all' ? null : filterType === 'completed';
-            const data = await todoService.getAll(searchTerm, isCompletedParam);
+            const data = await todoService.getAll(debouncedSearchTerm, isCompletedParam);
             setTodos(data);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to synchronize with core.');
         } finally {
             setIsLoading(false);
         }
-    }, [searchTerm, filterType]);
+    }, [debouncedSearchTerm, filterType]);
 
     useEffect(() => {
         fetchTodos();
@@ -97,8 +121,8 @@ export const Dashboard = () => {
                     <FontAwesomeIcon icon={faExclamationCircle} /> {error}
                 </div>
             ) : isLoading ? (
-                <div className="flex justify-center p-12">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-xray-cyan"></div>
+                <div className="flex justify-center p-12 transition-opacity duration-300" style={{ opacity: showLoading ? 1 : 0 }}>
+                    {showLoading && <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-xray-cyan"></div>}
                 </div>
             ) : (
                 <div className="space-y-6 pt-10">
