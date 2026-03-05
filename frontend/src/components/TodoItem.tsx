@@ -6,8 +6,8 @@ import { TodoForm } from './TodoForm';
 
 interface TodoItemProps {
     todo: Todo;
-    onToggleStatus: (id: number, currentStatus: boolean) => void;
-    onDelete: (id: number) => void;
+    onToggleStatus: (id: number, currentStatus: boolean) => Promise<void>;
+    onDelete: (id: number) => Promise<void>;
     onEdit: (todo: Todo) => Promise<void>;
 }
 

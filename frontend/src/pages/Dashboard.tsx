@@ -61,13 +61,12 @@ export const Dashboard = () => {
     };
 
     const handleDelete = async (id: number) => {
-        if (!window.confirm('Delete data node?')) return;
         setError(null);
         try {
             await todoService.delete(id);
-            fetchTodos();
+            await fetchTodos();
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Data purge failed.');
+            setError(err instanceof Error ? `Delete failed: ${err.message}` : 'Delete failed.');
         }
     };
 
