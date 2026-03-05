@@ -7,13 +7,15 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddOpenApi();
+builder.Services.AddProblemDetails();
+builder.Services.AddValidation();
 
 // Configure SQLite
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=todo.db";
 builder.Services.AddDbContext<TodoDbContext>(options =>
     options.UseSqlite(connectionString));
 
-// Add CORS to allow frontend access
+// Add CORS to allow frontend access (if we were going to use a different domain)
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>

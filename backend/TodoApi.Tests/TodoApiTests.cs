@@ -121,4 +121,14 @@ public class TodoApiTests : IClassFixture<WebApplicationFactory<Program>>
         var getResponse = await _client.GetAsync($"/todos/{todo.Id}");
         Assert.Equal(HttpStatusCode.NotFound, getResponse.StatusCode);
     }
+
+    [Fact]
+    public async Task CreateTodo_ReturnsBadRequest_WhenTitleIsMissing()
+    {
+        // Try to create a todo with an empty title (which violates the [Required] attribute)
+        var invalidTodo = new TodoItem { Title = "", Description = "This should fail validation" };
+        var response = await _client.PostAsJsonAsync("/todos", invalidTodo);
+        
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
 }
