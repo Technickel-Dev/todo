@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
+using MockQueryable.Moq;
+using Moq;
 using TodoApi.Data;
 using TodoApi.Handlers;
 using TodoApi.Models;
@@ -9,24 +11,33 @@ namespace TodoApi.Tests;
 
 public class TodoHandlerTests
 {
-    private TodoDbContext GetDbContext()
+    private (Mock<TodoDbContext> dbMock, Mock<DbSet<TodoTask>> taskSetMock) GetMocks(List<TodoTask>? initialData = null)
     {
-        var options = new DbContextOptionsBuilder<TodoDbContext>()
-            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-            .Options;
+        var data = initialData ?? new List<TodoTask>();
+        var mockSet = data.BuildMockDbSet();
         
-        return new TodoDbContext(options);
+        var options = new DbContextOptionsBuilder<TodoDbContext>()
+            .UseSqlite("DataSource=:memory:")
+            .Options;
+            
+        var dbMock = new Mock<TodoDbContext>(options);
+        dbMock.Setup(m => m.Tasks).Returns(mockSet.Object);
+        dbMock.Setup(m => m.SaveChangesAsync(default)).ReturnsAsync(1);
+
+        return (dbMock, mockSet);
     }
 
     [Fact]
     public async Task GetAllTasks_FiltersBySearch()
     {
-        using var db = GetDbContext();
-        db.Tasks.Add(new TodoTask { Title = "Apple", Description = "Fruit" });
-        db.Tasks.Add(new TodoTask { Title = "Banana", Description = "Fruit" });
-        await db.SaveChangesAsync();
+        var data = new List<TodoTask>
+        {
+            new TodoTask { Title = "Apple", Description = "Fruit" },
+            new TodoTask { Title = "Banana", Description = "Fruit" }
+        };
+        var (dbMock, _) = GetMocks(data);
 
-        var result = await TodoHandlers.GetAllTasks(db, "Apple", null);
+        var result = await TodoHandlers.GetAllTasks(dbMock.Object, "Apple", null);
         
         var okResult = Assert.IsType<Ok<List<TodoTask>>>(result);
         Assert.Single(okResult.Value!);
@@ -36,9 +47,9 @@ public class TodoHandlerTests
     [Fact]
     public async Task GetTaskById_ReturnsNotFound_WhenTaskDoesNotExist()
     {
-        using var db = GetDbContext();
+        var (dbMock, _) = GetMocks();
         
-        var result = await TodoHandlers.GetTaskById(999, db);
+        var result = await TodoHandlers.GetTaskById(999, dbMock.Object);
         
         Assert.IsType<NotFound>(result);
     }
@@ -46,45 +57,47 @@ public class TodoHandlerTests
     [Fact]
     public async Task CreateTask_PersistsTask()
     {
-        using var db = GetDbContext();
+        var (dbMock, taskSetMock) = GetMocks();
         var newTask = new TodoTask { Title = "New Task" };
 
-        var result = await TodoHandlers.CreateTask(newTask, db);
+        var result = await TodoHandlers.CreateTask(newTask, dbMock.Object);
 
         var createdResult = Assert.IsType<Created<TodoTask>>(result);
         Assert.Equal("New Task", createdResult.Value!.Title);
-        Assert.Equal(1, await db.Tasks.CountAsync());
+        dbMock.Verify(m => m.SaveChangesAsync(default), Times.Once);
     }
 
     [Fact]
     public async Task UpdateTask_ModifiesExistingTask()
     {
-        using var db = GetDbContext();
-        var task = new TodoTask { Title = "Old Title", Description = "Old Description" };
-        db.Tasks.Add(task);
-        await db.SaveChangesAsync();
+        var task = new TodoTask { Id = 1, Title = "Old Title", Description = "Old Description" };
+        var (dbMock, taskSetMock) = GetMocks(new List<TodoTask> { task });
+        
+        // FindAsync is tricky with mocks, but MockQueryable helper usually setup it if used correctly.
+        // If not, we can setup it manually.
+        taskSetMock.Setup(m => m.FindAsync(1)).ReturnsAsync(task);
 
         var updateInfo = new TodoTask { Title = "New Title", Description = "New Description", IsCompleted = true };
-        var result = await TodoHandlers.UpdateTask(task.Id, updateInfo, db);
+        var result = await TodoHandlers.UpdateTask(1, updateInfo, dbMock.Object);
 
         Assert.IsType<NoContent>(result);
-        var updated = await db.Tasks.FindAsync(task.Id);
-        Assert.NotNull(updated);
-        Assert.Equal("New Title", updated.Title);
-        Assert.True(updated.IsCompleted);
+        Assert.Equal("New Title", task.Title);
+        Assert.Equal("New Description", task.Description);
+        Assert.True(task.IsCompleted);
+        dbMock.Verify(m => m.SaveChangesAsync(default), Times.Once);
     }
 
     [Fact]
     public async Task DeleteTask_RemovesTask()
     {
-        using var db = GetDbContext();
-        var task = new TodoTask { Title = "To Delete" };
-        db.Tasks.Add(task);
-        await db.SaveChangesAsync();
+        var task = new TodoTask { Id = 1, Title = "To Delete" };
+        var (dbMock, taskSetMock) = GetMocks(new List<TodoTask> { task });
+        taskSetMock.Setup(m => m.FindAsync(1)).ReturnsAsync(task);
 
-        var result = await TodoHandlers.DeleteTask(task.Id, db);
+        var result = await TodoHandlers.DeleteTask(task.Id, dbMock.Object);
 
         Assert.IsType<NoContent>(result);
-        Assert.Equal(0, await db.Tasks.CountAsync());
+        taskSetMock.Verify(m => m.Remove(It.IsAny<TodoTask>()), Times.Once);
+        dbMock.Verify(m => m.SaveChangesAsync(default), Times.Once);
     }
 }

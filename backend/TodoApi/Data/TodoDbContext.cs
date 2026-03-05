@@ -10,7 +10,7 @@ public class TodoDbContext : DbContext
     {
     }
 
-    public DbSet<TodoTask> Tasks => Set<TodoTask>();
+    public virtual DbSet<TodoTask> Tasks => Set<TodoTask>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
