@@ -83,9 +83,6 @@ export const Dashboard = () => {
         }
     };
 
-    // Filtered todos are now updated directly from the backend via fetchTodos (debounced or on change)
-    const filteredTodos = todos;
-
     return (
         <div className="space-y-6">
             <TodoHeader
@@ -118,7 +115,7 @@ export const Dashboard = () => {
                         </div>
                     )}
 
-                    {filteredTodos.map(todo => (
+                    {todos.map(todo => (
                         <TodoItem
                             key={todo.id}
                             todo={todo}
