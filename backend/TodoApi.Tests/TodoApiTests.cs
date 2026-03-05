@@ -49,76 +49,76 @@ public class TodoApiTests : IClassFixture<WebApplicationFactory<Program>>
     }
 
     [Fact]
-    public async Task GetTasks_ReturnsSuccess()
+    public async Task GetTodos_ReturnsSuccess()
     {
-        var response = await _client.GetAsync("/tasks");
+        var response = await _client.GetAsync("/todos");
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
     [Fact]
-    public async Task CreateTask_AddsTaskToDatabase()
+    public async Task CreateTodo_AddsTodoToDatabase()
     {
-        var newTask = new TodoTask { Title = "Test Task", Description = "Test Description" };
-        var response = await _client.PostAsJsonAsync("/tasks", newTask);
+        var newTodo = new TodoItem { Title = "Test Todo", Description = "Test Description" };
+        var response = await _client.PostAsJsonAsync("/todos", newTodo);
         
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         
-        var createdTask = await response.Content.ReadFromJsonAsync<TodoTask>();
-        Assert.NotNull(createdTask);
-        Assert.Equal("Test Task", createdTask.Title);
-        Assert.True(createdTask.Id > 0);
+        var createdTodo = await response.Content.ReadFromJsonAsync<TodoItem>();
+        Assert.NotNull(createdTodo);
+        Assert.Equal("Test Todo", createdTodo.Title);
+        Assert.True(createdTodo.Id > 0);
     }
 
     [Fact]
-    public async Task SearchTasks_FiltersByTitle()
+    public async Task SearchTodos_FiltersByTitle()
     {
-        // Add specific tasks
-        await _client.PostAsJsonAsync("/tasks", new TodoTask { Title = "UniqueTitle123" });
-        await _client.PostAsJsonAsync("/tasks", new TodoTask { Title = "OtherTask" });
+        // Add specific todos
+        await _client.PostAsJsonAsync("/todos", new TodoItem { Title = "UniqueTitle123" });
+        await _client.PostAsJsonAsync("/todos", new TodoItem { Title = "OtherTodo" });
 
         // Search
-        var response = await _client.GetAsync("/tasks?search=UniqueTitle123");
-        var tasks = await response.Content.ReadFromJsonAsync<List<TodoTask>>();
+        var response = await _client.GetAsync("/todos?search=UniqueTitle123");
+        var todos = await response.Content.ReadFromJsonAsync<List<TodoItem>>();
 
-        Assert.NotNull(tasks);
-        Assert.Contains(tasks, t => t.Title == "UniqueTitle123");
-        Assert.DoesNotContain(tasks, t => t.Title == "OtherTask");
+        Assert.NotNull(todos);
+        Assert.Contains(todos, t => t.Title == "UniqueTitle123");
+        Assert.DoesNotContain(todos, t => t.Title == "OtherTodo");
     }
 
     [Fact]
-    public async Task UpdateTask_ModifiesExistingTask()
+    public async Task UpdateTodo_ModifiesExistingTodo()
     {
         // Create
-        var postResponse = await _client.PostAsJsonAsync("/tasks", new TodoTask { Title = "Initial" });
-        var task = await postResponse.Content.ReadFromJsonAsync<TodoTask>();
-        Assert.NotNull(task);
+        var postResponse = await _client.PostAsJsonAsync("/todos", new TodoItem { Title = "Initial" });
+        var todo = await postResponse.Content.ReadFromJsonAsync<TodoItem>();
+        Assert.NotNull(todo);
 
         // Update
-        task.Title = "Updated";
-        var putResponse = await _client.PutAsJsonAsync($"/tasks/{task.Id}", task);
+        todo.Title = "Updated";
+        var putResponse = await _client.PutAsJsonAsync($"/todos/{todo.Id}", todo);
         Assert.Equal(HttpStatusCode.NoContent, putResponse.StatusCode);
 
         // Verify
-        var getResponse = await _client.GetAsync($"/tasks/{task.Id}");
-        var updatedTask = await getResponse.Content.ReadFromJsonAsync<TodoTask>();
-        Assert.NotNull(updatedTask);
-        Assert.Equal("Updated", updatedTask.Title);
+        var getResponse = await _client.GetAsync($"/todos/{todo.Id}");
+        var updatedTodo = await getResponse.Content.ReadFromJsonAsync<TodoItem>();
+        Assert.NotNull(updatedTodo);
+        Assert.Equal("Updated", updatedTodo.Title);
     }
 
     [Fact]
-    public async Task DeleteTask_RemovesTaskFromDatabase()
+    public async Task DeleteTodo_RemovesTodoFromDatabase()
     {
         // Create
-        var postResponse = await _client.PostAsJsonAsync("/tasks", new TodoTask { Title = "To Be Deleted" });
-        var task = await postResponse.Content.ReadFromJsonAsync<TodoTask>();
-        Assert.NotNull(task);
+        var postResponse = await _client.PostAsJsonAsync("/todos", new TodoItem { Title = "To Be Deleted" });
+        var todo = await postResponse.Content.ReadFromJsonAsync<TodoItem>();
+        Assert.NotNull(todo);
 
         // Delete
-        var deleteResponse = await _client.DeleteAsync($"/tasks/{task.Id}");
+        var deleteResponse = await _client.DeleteAsync($"/todos/{todo.Id}");
         Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
 
         // Verify 404
-        var getResponse = await _client.GetAsync($"/tasks/{task.Id}");
+        var getResponse = await _client.GetAsync($"/todos/{todo.Id}");
         Assert.Equal(HttpStatusCode.NotFound, getResponse.StatusCode);
     }
 }

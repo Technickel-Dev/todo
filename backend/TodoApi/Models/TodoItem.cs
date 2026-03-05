@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace TodoApi.Models;
 
-public class TodoTask
+public class TodoItem
 {
     public int Id { get; set; }
 

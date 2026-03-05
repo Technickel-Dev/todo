@@ -18,9 +18,10 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.AllowAnyOrigin()
+        policy.WithOrigins("http://localhost:5173")
               .AllowAnyHeader()
-              .AllowAnyMethod();
+              .AllowAnyMethod()
+              .AllowCredentials();
     });
 });
 
@@ -42,15 +43,15 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseCors();
 
-// --- Minimal API Endpoints for Tasks ---
+// --- Minimal API Endpoints for Todos ---
 
-var tasks = app.MapGroup("/tasks");
+var todos = app.MapGroup("/todos");
 
-tasks.MapGet("/", TodoHandlers.GetAllTasks);
-tasks.MapGet("/{id:int}", TodoHandlers.GetTaskById);
-tasks.MapPost("/", TodoHandlers.CreateTask);
-tasks.MapPut("/{id:int}", TodoHandlers.UpdateTask);
-tasks.MapDelete("/{id:int}", TodoHandlers.DeleteTask);
+todos.MapGet("/", TodoHandlers.GetAllTodos);
+todos.MapGet("/{id:int}", TodoHandlers.GetTodoById);
+todos.MapPost("/", TodoHandlers.CreateTodo);
+todos.MapPut("/{id:int}", TodoHandlers.UpdateTodo);
+todos.MapDelete("/{id:int}", TodoHandlers.DeleteTodo);
 
 app.Run();
 

@@ -1,4 +1,4 @@
-export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5214';
 
 // Create a configured fetch wrapper that automatically includes credentials (cookies)
 export const apiClient = async (
@@ -15,7 +15,7 @@ export const apiClient = async (
         },
         // CRITICAL: This ensures HTTP-only cookies (like the ASP.NET Core Identity cookie) 
         // are sent with cross-origin or same-origin requests naturally.
-        credentials: 'include',
+        // credentials: 'include',
     };
 
     const response = await fetch(url, defaultOptions);

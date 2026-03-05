@@ -12,7 +12,7 @@ export const TodoFilter: React.FC<TodoFilterProps> = ({ value, onChange }) => {
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     const options = [
-        { value: 'all', label: 'All Tasks' },
+        { value: 'all', label: 'All' },
         { value: 'active', label: 'Active' },
         { value: 'completed', label: 'Completed' },
     ] as const;

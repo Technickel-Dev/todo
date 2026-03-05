@@ -1,42 +1,42 @@
 import React, { useState } from 'react';
-import type { Task } from '../types';
+import type { Todo } from '../types';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheck, faTrash, faEdit } from '@fortawesome/free-solid-svg-icons';
 import { TodoForm } from './TodoForm';
 
 interface TodoItemProps {
-    task: Task;
+    todo: Todo;
     onToggleStatus: (id: number, currentStatus: boolean) => void;
     onDelete: (id: number) => void;
-    onEdit: (task: Task) => Promise<void>;
+    onEdit: (todo: Todo) => Promise<void>;
 }
 
-export const TodoItem: React.FC<TodoItemProps> = ({ task, onToggleStatus, onDelete, onEdit }) => {
+export const TodoItem: React.FC<TodoItemProps> = ({ todo, onToggleStatus, onDelete, onEdit }) => {
     const [isDeleting, setIsDeleting] = useState(false);
     const [isToggling, setIsToggling] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
 
     const handleDelete = async () => {
         setIsDeleting(true);
-        await onDelete(task.id);
+        await onDelete(todo.id);
         setIsDeleting(false);
     };
 
     const handleToggle = async () => {
         setIsToggling(true);
-        await onToggleStatus(task.id, task.isCompleted);
+        await onToggleStatus(todo.id, todo.isCompleted);
         setIsToggling(false);
     };
 
-    const handleEditSubmit = async (taskData: Partial<Task>) => {
-        await onEdit({ ...task, ...taskData });
+    const handleEditSubmit = async (todoData: Partial<Todo>) => {
+        await onEdit({ ...todo, ...todoData });
         setIsEditing(false);
     };
 
     if (isEditing) {
         return (
             <TodoForm
-                task={task}
+                todo={todo}
                 isInline={true}
                 onSubmit={handleEditSubmit}
                 onCancel={() => setIsEditing(false)}
@@ -45,35 +45,32 @@ export const TodoItem: React.FC<TodoItemProps> = ({ task, onToggleStatus, onDele
     }
 
     return (
-        <div className={`xray-film p-5 pt-8 flex items-center gap-4 ${task.isCompleted ? 'opacity-70 grayscale hover:grayscale-0' : ''}`}>
-            {/* The physical clip holding the film */}
+        <div className={`xray-film p-5 pt-8 flex items-center gap-4 ${todo.isCompleted ? 'opacity-70 grayscale hover:grayscale-0' : ''}`}>
             <div className="xray-film-clip"></div>
-
-            {/* The inner containment for the overflow-hidden animations */}
             <div className="xray-film-inner"></div>
 
             <button
                 onClick={handleToggle}
                 disabled={isToggling}
                 className={`w-6 h-6 rounded border flex items-center justify-center shrink-0 transition-all z-10 relative cursor-pointer disabled:cursor-not-allowed
-          ${task.isCompleted
+          ${todo.isCompleted
                         ? 'bg-xray-green border-xray-green text-xray-bg drop-shadow-[0_0_8px_rgba(52,211,153,0.8)]'
                         : 'border-xray-text-muted hover:border-xray-cyan bg-black/50 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]'}`}
             >
                 {isToggling ? (
                     <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current"></div>
                 ) : (
-                    task.isCompleted && <FontAwesomeIcon icon={faCheck} className="text-xs" />
+                    todo.isCompleted && <FontAwesomeIcon icon={faCheck} className="text-xs" />
                 )}
             </button>
 
             <div className="flex-1 min-w-0 z-10 relative">
-                <h3 className={`text-lg font-medium truncate xray-film-text ${task.isCompleted ? 'line-through text-xray-text-muted' : 'text-white'}`}>
-                    {task.title}
+                <h3 className={`text-lg font-medium truncate xray-film-text ${todo.isCompleted ? 'line-through text-xray-text-muted' : 'text-white'}`}>
+                    {todo.title}
                 </h3>
-                {task.description && (
+                {todo.description && (
                     <p className="text-xs text-xray-text-muted mt-1 truncate">
-                        {task.description}
+                        {todo.description}
                     </p>
                 )}
             </div>
@@ -82,7 +79,7 @@ export const TodoItem: React.FC<TodoItemProps> = ({ task, onToggleStatus, onDele
                 <button
                     onClick={() => setIsEditing(true)}
                     className="p-2 text-xray-text-muted hover:text-xray-cyan transition-colors xray-film-icon cursor-pointer"
-                    title="Edit Task"
+                    title="Edit Todo"
                 >
                     <FontAwesomeIcon icon={faEdit} />
                 </button>
@@ -90,7 +87,7 @@ export const TodoItem: React.FC<TodoItemProps> = ({ task, onToggleStatus, onDele
                     onClick={handleDelete}
                     disabled={isDeleting}
                     className="p-2 text-xray-text-muted hover:text-red-400 transition-colors xray-film-icon cursor-pointer disabled:cursor-not-allowed"
-                    title="Delete Task"
+                    title="Delete Todo"
                 >
                     {isDeleting ? (
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-400"></div>
@@ -99,7 +96,6 @@ export const TodoItem: React.FC<TodoItemProps> = ({ task, onToggleStatus, onDele
                     )}
                 </button>
             </div>
-
         </div>
     );
 };

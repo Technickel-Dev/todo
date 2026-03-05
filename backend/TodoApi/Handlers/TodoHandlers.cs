@@ -6,9 +6,9 @@ namespace TodoApi.Handlers;
 
 public static class TodoHandlers
 {
-    public static async Task<IResult> GetAllTasks(TodoDbContext db, string? search, bool? isCompleted)
+    public static async Task<IResult> GetAllTodos(TodoDbContext db, string? search, bool? isCompleted)
     {
-        var query = db.Tasks.AsQueryable();
+        var query = db.Todos.AsQueryable();
 
         if (isCompleted.HasValue)
         {
@@ -25,38 +25,38 @@ public static class TodoHandlers
         return Results.Ok(results);
     }
 
-    public static async Task<IResult> GetTaskById(int id, TodoDbContext db)
+    public static async Task<IResult> GetTodoById(int id, TodoDbContext db)
     {
-        return await db.Tasks.FindAsync(id) is TodoTask task 
-            ? Results.Ok(task) 
+        return await db.Todos.FindAsync(id) is TodoItem todo 
+            ? Results.Ok(todo) 
             : Results.NotFound();
     }
 
-    public static async Task<IResult> CreateTask(TodoTask task, TodoDbContext db)
+    public static async Task<IResult> CreateTodo(TodoItem todo, TodoDbContext db)
     {
-        db.Tasks.Add(task);
+        db.Todos.Add(todo);
         await db.SaveChangesAsync();
-        return Results.Created($"/tasks/{task.Id}", task);
+        return Results.Created($"/todos/{todo.Id}", todo);
     }
 
-    public static async Task<IResult> UpdateTask(int id, TodoTask inputTask, TodoDbContext db)
+    public static async Task<IResult> UpdateTodo(int id, TodoItem inputTodo, TodoDbContext db)
     {
-        var task = await db.Tasks.FindAsync(id);
-        if (task is null) return Results.NotFound();
+        var todo = await db.Todos.FindAsync(id);
+        if (todo is null) return Results.NotFound();
 
-        task.Title = inputTask.Title;
-        task.Description = inputTask.Description;
-        task.IsCompleted = inputTask.IsCompleted;
+        todo.Title = inputTodo.Title;
+        todo.Description = inputTodo.Description;
+        todo.IsCompleted = inputTodo.IsCompleted;
 
         await db.SaveChangesAsync();
         return Results.NoContent();
     }
 
-    public static async Task<IResult> DeleteTask(int id, TodoDbContext db)
+    public static async Task<IResult> DeleteTodo(int id, TodoDbContext db)
     {
-        if (await db.Tasks.FindAsync(id) is TodoTask task)
+        if (await db.Todos.FindAsync(id) is TodoItem todo)
         {
-            db.Tasks.Remove(task);
+            db.Todos.Remove(todo);
             await db.SaveChangesAsync();
             return Results.NoContent();
         }

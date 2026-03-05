@@ -1,26 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import type { Task } from '../types';
+import type { Todo } from '../types';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes, faSave } from '@fortawesome/free-solid-svg-icons';
 
 interface TodoFormProps {
-    task?: Task | null;
+    todo?: Todo | null;
     isInline?: boolean;
-    onSubmit: (taskData: Partial<Task>) => Promise<void>;
+    onSubmit: (todoData: Partial<Todo>) => Promise<void>;
     onCancel: () => void;
 }
 
-export const TodoForm: React.FC<TodoFormProps> = ({ task, isInline = false, onSubmit, onCancel }) => {
+export const TodoForm: React.FC<TodoFormProps> = ({ todo, isInline = false, onSubmit, onCancel }) => {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
-        if (task) {
-            setTitle(task.title);
-            setDescription(task.description || '');
+        if (todo) {
+            setTitle(todo.title);
+            setDescription(todo.description || '');
         }
-    }, [task]);
+    }, [todo]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -53,7 +53,7 @@ export const TodoForm: React.FC<TodoFormProps> = ({ task, isInline = false, onSu
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     className="xray-inline-input text-lg font-medium xray-film-text"
-                    placeholder="Task name"
+                    placeholder="Todo name"
                 />
 
                 <textarea
@@ -70,7 +70,7 @@ export const TodoForm: React.FC<TodoFormProps> = ({ task, isInline = false, onSu
                     type="submit"
                     disabled={isSubmitting || !title.trim()}
                     className="p-2 text-xray-cyan hover:text-white transition-colors xray-film-icon"
-                    title={task ? 'Save Changes' : 'Create Task'}
+                    title={todo ? 'Save Changes' : 'Create Todo'}
                 >
                     {isSubmitting ? (
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>

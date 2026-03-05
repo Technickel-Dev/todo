@@ -10,13 +10,13 @@ public class TodoDbContext : DbContext
     {
     }
 
-    public virtual DbSet<TodoTask> Tasks => Set<TodoTask>();
+    public virtual DbSet<TodoItem> Todos => Set<TodoItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
         
-        modelBuilder.Entity<TodoTask>(entity =>
+        modelBuilder.Entity<TodoItem>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
