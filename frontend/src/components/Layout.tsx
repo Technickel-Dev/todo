@@ -1,11 +1,10 @@
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 import { Logo } from './Logo';
 import { authService } from '../api/auth';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faRightFromBracket } from '@fortawesome/free-solid-svg-icons';
 
 export const Layout = () => {
-    const navigate = useNavigate();
     const isAuthenticated = authService.isAuthenticated();
 
     const handleLogout = async () => {
