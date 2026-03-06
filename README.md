@@ -9,6 +9,20 @@ See [Frontend README](frontend/README.md) for instructions on running the fronte
 
 See [Backend README](backend/README.md) for instructions on running the backend and the design choices made there.
 
+## 🚀 Usage Guide
+
+Once the application is running (see component READMEs for setup), open your browser and navigate to `http://localhost:5173`.
+
+1. **Register**: Click the "Register" link on the login page to create a new, isolated user account. All your tasks will be securely tied only to you.
+2. **Login**: Use the credentials you just created to authenticate.
+3. **Dashboard**: After logging in, you'll see your main X-Ray dashboard.
+4. **Create**: Use the "New Todo" input at the top to quickly add items to your list.
+5. **Manage**: Click the glowing checkbox to toggle a task's status, or use the "Edit" button to change its name.
+6. **Search**: Use the search bar to instantly filter your tasks. The search is debounced, so you can type naturally.
+7. **Details**: Click the "Details" button on any task to view expanded information, including creation dates and a longer description if you added one.
+8. **Delete**: Remove any to-dos that you are not happy with!
+9. **Logout**: Click the "Logout" button to log out.
+
 ## Assumptions
 
 - Users want a fast, desktop-like experience, expecting UI updates without page reloads.
