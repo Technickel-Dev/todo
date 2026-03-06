@@ -1,7 +1,18 @@
-import { Outlet } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import { Logo } from './Logo';
+import { authService } from '../api/auth';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faRightFromBracket } from '@fortawesome/free-solid-svg-icons';
 
 export const Layout = () => {
+    const navigate = useNavigate();
+    const isAuthenticated = authService.isAuthenticated();
+
+    const handleLogout = () => {
+        authService.logout();
+        navigate('/login');
+    };
+
     return (
         <div className="min-h-screen flex flex-col">
             <header className="xray-panel sticky top-0 z-40 rounded-none border-t-0 border-x-0 mx-0">
@@ -13,6 +24,16 @@ export const Layout = () => {
                                 <span className="text-xray-cyan">X-Ray</span> To-do <span className="text-xray-cyan">List</span>
                             </h1>
                         </div>
+
+                        {isAuthenticated && (
+                            <button
+                                onClick={handleLogout}
+                                className="xray-btn-danger px-4 py-1.5 flex items-center gap-2 group"
+                            >
+                                <FontAwesomeIcon icon={faRightFromBracket} className="group-hover:translate-x-0.5 transition-transform" />
+                                <span className="hidden sm:inline">Logout</span>
+                            </button>
+                        )}
                     </div>
                 </div>
             </header>

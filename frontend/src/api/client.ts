@@ -7,18 +7,56 @@ export const apiClient = async (
 ) => {
     const url = `${API_URL}${endpoint}`;
 
-    const defaultOptions: RequestInit = {
-        ...options,
-        headers: {
-            'Content-Type': 'application/json',
-            ...options.headers,
-        },
-        // CRITICAL: This ensures HTTP-only cookies (like the ASP.NET Core Identity cookie) 
-        // are sent with cross-origin or same-origin requests naturally.
-        // credentials: 'include',
+    const executeRequest = async (token: string | null) => {
+        return fetch(url, {
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+                ...options.headers,
+            },
+        });
     };
 
-    const response = await fetch(url, defaultOptions);
+    const getAuth = () => {
+        const auth = localStorage.getItem('auth');
+        return auth ? JSON.parse(auth) : null;
+    };
+
+    let auth = getAuth();
+    let response = await executeRequest(auth?.accessToken);
+
+    // If 401 and we have a refresh token, try to refresh and retry
+    if (response.status === 401 && endpoint !== '/login' && endpoint !== '/refresh') {
+        const refreshToken = auth?.refreshToken;
+        if (refreshToken) {
+            try {
+                const refreshResponse = await fetch(`${API_URL}/refresh`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ refreshToken }),
+                });
+
+                if (refreshResponse.ok) {
+                    const newTokens = await refreshResponse.json();
+                    localStorage.setItem('auth', JSON.stringify(newTokens));
+
+                    // Retry original request and replace the response object
+                    response = await executeRequest(newTokens.accessToken);
+                }
+            } catch (err) {
+                console.error('Token refresh failed:', err);
+            }
+        }
+    }
+
+    // Capture the final 401 state (either from the first try or the retry)
+    if (response.status === 401 && endpoint !== '/login') {
+        localStorage.removeItem('auth');
+        if (window.location.pathname !== '/login') {
+            window.location.href = '/login';
+        }
+    }
 
     // Try to parse JSON if the response has it
     let data;
