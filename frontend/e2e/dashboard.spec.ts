@@ -1,13 +1,11 @@
 import { test, expect } from '@playwright/test';
+import { registerAndLogin } from './helpers';
 
 test.describe('Dashboard Interactions', () => {
-    test.beforeEach(async ({ page }) => {
-        // Go to the dashboard
-        await page.goto('/');
+    const testEmail = `dashboard-${Date.now()}@example.com`;
 
-        // Wait for the app to finish its initial data load
-        // The spinner should disappear
-        await expect(page.locator('.animate-spin')).toHaveCount(0, { timeout: 10000 });
+    test.beforeEach(async ({ page }) => {
+        await registerAndLogin(page, testEmail);
     });
 
     test('should create a new todo', async ({ page }) => {

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { authService } from '../api/auth';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faRightToBracket } from '@fortawesome/free-solid-svg-icons';
+import { faRightToBracket, faCircleInfo } from '@fortawesome/free-solid-svg-icons';
 
 export const Login: React.FC = () => {
     const [email, setEmail] = useState('');
@@ -10,6 +10,8 @@ export const Login: React.FC = () => {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+    const location = useLocation();
+    const message = location.state?.message;
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -37,6 +39,13 @@ export const Login: React.FC = () => {
                         <FontAwesomeIcon icon={faRightToBracket} className="xray-film-icon text-xray-cyan text-xl" />
                         <h1 className="text-2xl font-light tracking-[0.2em] uppercase xray-film-text">Login</h1>
                     </div>
+
+                    {message && !error && (
+                        <div className="mb-6 flex items-start gap-3 text-xray-cyan text-xs font-light tracking-wide bg-xray-cyan/10 p-3 rounded-lg border border-xray-cyan/20">
+                            <FontAwesomeIcon icon={faCircleInfo} className="mt-0.5" />
+                            <span>{message}</span>
+                        </div>
+                    )}
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div>

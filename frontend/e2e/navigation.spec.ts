@@ -1,10 +1,16 @@
 import { test, expect } from '@playwright/test';
+import { registerAndLogin } from './helpers';
 
 test.describe('Navigation and Detail Page', () => {
+    const testEmail = `nav-${Date.now()}@example.com`;
+
+    test.beforeEach(async ({ page }) => {
+        await registerAndLogin(page, testEmail);
+    });
+
     test('should navigate to detail page and back', async ({ page }) => {
         // 1. Setup - Create a Todo to navigate into
         await page.goto('/');
-        await expect(page.locator('.animate-spin')).toHaveCount(0, { timeout: 10000 });
 
         const todoTitle = `Nav Test ${Date.now()}`;
         await page.getByRole('button', { name: 'New Todo' }).click();
