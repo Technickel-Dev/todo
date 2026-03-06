@@ -8,9 +8,8 @@ export const Layout = () => {
     const navigate = useNavigate();
     const isAuthenticated = authService.isAuthenticated();
 
-    const handleLogout = () => {
-        authService.logout();
-        navigate('/login');
+    const handleLogout = async () => {
+        await authService.logout();
     };
 
     return (

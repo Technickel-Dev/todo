@@ -1,38 +1,32 @@
 import { apiClient } from './client';
-import type { LoginRequest, RegisterRequest, AuthResponse } from '../types';
+import type { LoginRequest, RegisterRequest } from '../types';
 
 export const authService = {
-    async login(credentials: LoginRequest): Promise<AuthResponse> {
-        const { data } = await apiClient('/login', {
+    async fetchCsrfToken(): Promise<void> {
+        const { data } = await apiClient('/antiforgery/token');
+        if (data && data.token) {
+            localStorage.setItem('xsrf-token', data.token);
+        }
+    },
+
+    async login(credentials: LoginRequest): Promise<void> {
+        await apiClient('/login?useCookies=true', {
             method: 'POST',
             body: JSON.stringify(credentials),
         });
 
-        if (data.accessToken) {
-            localStorage.setItem('auth', JSON.stringify(data));
-        }
-
-        return data;
+        // With cookie-based auth, we just track that we're logged in for UI hints
+        localStorage.setItem('is-authenticated', 'true');
+        await this.fetchCsrfToken();
     },
 
-    async refresh(): Promise<AuthResponse> {
-        const authData = localStorage.getItem('auth');
-        const refreshToken = authData ? JSON.parse(authData).refreshToken : null;
-
-        if (!refreshToken) {
-            throw new Error('No refresh token available');
-        }
-
-        const { data } = await apiClient('/refresh', {
+    async refresh(): Promise<void> {
+        // Refreshing with cookies is usually handled by the browser 
+        // or by calling a refresh endpoint that updates cookies
+        await apiClient('/refresh', {
             method: 'POST',
-            body: JSON.stringify({ refreshToken }),
+            body: JSON.stringify({}), // refreshToken comes from cookie
         });
-
-        if (data.accessToken) {
-            localStorage.setItem('auth', JSON.stringify(data));
-        }
-
-        return data;
     },
 
     async register(credentials: RegisterRequest): Promise<void> {
@@ -42,17 +36,17 @@ export const authService = {
         });
     },
 
-    logout(): void {
-        localStorage.removeItem('auth');
-        window.location.href = '/login';
-    },
-
-    getAuth(): AuthResponse | null {
-        const auth = localStorage.getItem('auth');
-        return auth ? JSON.parse(auth) : null;
+    async logout(): Promise<void> {
+        try {
+            await apiClient('/logout', { method: 'POST' });
+        } finally {
+            localStorage.removeItem('is-authenticated');
+            localStorage.removeItem('xsrf-token');
+            window.location.href = '/login';
+        }
     },
 
     isAuthenticated(): boolean {
-        return !!this.getAuth()?.accessToken;
+        return localStorage.getItem('is-authenticated') === 'true';
     }
 };

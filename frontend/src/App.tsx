@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { Dashboard } from './pages/Dashboard';
@@ -5,8 +6,14 @@ import { TodoDetail } from './pages/TodoDetail';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { authService } from './api/auth';
 
 function App() {
+  useEffect(() => {
+    // Fetch CSRF token on startup
+    authService.fetchCsrfToken().catch(err => console.error('Failed to fetch CSRF token:', err));
+  }, []);
+
   return (
     <BrowserRouter>
       <Routes>
