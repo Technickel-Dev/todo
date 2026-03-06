@@ -1,6 +1,8 @@
 # X-Ray To-do List
 A simple to-do list app that explores using React on the frontend and .NET on the backend with production-minded capabilities like filtering and simple fuzzy search.
 
+![X-Ray To-do List Dashboard](screenshot.png)
+
 ## Frontend
 
 See [Frontend README](frontend/README.md) for instructions on running the frontend and the design choices made there.
