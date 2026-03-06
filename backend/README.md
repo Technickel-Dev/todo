@@ -13,3 +13,5 @@ integration testing uses sqlite in-memory database cleared after each test. Did 
 problem details for error responses - standard way to return error responses
 
 no dto or respository - keep things simple for a simple app
+
+DPAPI token based auth because it's simpler to setup. Secrets managed by OS unlike JWT. Token over cookie for scalibility (no need to store sessions in a single server which is better for distributed systems)

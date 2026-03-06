@@ -6,6 +6,7 @@ using TodoApi.Data;
 using TodoApi.Handlers;
 using TodoApi.Models;
 using Xunit;
+using System.Security.Claims;
 
 namespace TodoApi.Tests;
 
@@ -16,9 +17,8 @@ public class TodoHandlerTests
         var data = initialData ?? new List<TodoItem>();
         var mockSet = data.BuildMockDbSet();
         
-        var options = new DbContextOptionsBuilder<TodoDbContext>()
-            .UseSqlite("DataSource=:memory:")
-            .Options;
+        // Use empty options - we are mocking the context behaviors anyway
+        var options = new DbContextOptions<TodoDbContext>();
             
         var dbMock = new Mock<TodoDbContext>(options);
         dbMock.Setup(m => m.Todos).Returns(mockSet.Object);
@@ -27,29 +27,40 @@ public class TodoHandlerTests
         return (dbMock, mockSet);
     }
 
+    private ClaimsPrincipal GetMockUser(string userId = "test-user-id")
+    {
+        var claims = new[] { new Claim(ClaimTypes.NameIdentifier, userId) };
+        var identity = new ClaimsIdentity(claims, "Test");
+        return new ClaimsPrincipal(identity);
+    }
+
     [Fact]
     public async Task GetAllTodos_FiltersBySearch()
     {
         var data = new List<TodoItem>
         {
-            new TodoItem { Title = "Apple", Description = "Fruit" },
-            new TodoItem { Title = "Banana", Description = "Fruit" }
+            new TodoItem { Title = "Apple", Description = "Fruit", UserId = "test-user-id" },
+            new TodoItem { Title = "Banana", Description = "Fruit", UserId = "test-user-id" },
+            new TodoItem { Title = "Orange", Description = "Fruit", UserId = "other-user-id" }
         };
         var (dbMock, _) = GetMocks(data);
+        var user = GetMockUser();
 
-        var result = await TodoHandlers.GetAllTodos(dbMock.Object, "Apple", null);
+        var result = await TodoHandlers.GetAllTodos(dbMock.Object, user, "Apple", null);
         
         var okResult = Assert.IsType<Ok<List<TodoItem>>>(result);
         Assert.Single(okResult.Value!);
         Assert.Equal("Apple", okResult.Value![0].Title);
+        Assert.Equal("test-user-id", okResult.Value![0].UserId);
     }
 
     [Fact]
     public async Task GetTodoById_ReturnsNotFound_WhenTodoDoesNotExist()
     {
         var (dbMock, _) = GetMocks();
+        var user = GetMockUser();
         
-        var result = await TodoHandlers.GetTodoById(999, dbMock.Object);
+        var result = await TodoHandlers.GetTodoById(999, dbMock.Object, user);
         
         Assert.IsType<NotFound>(result);
     }
@@ -59,26 +70,42 @@ public class TodoHandlerTests
     {
         var (dbMock, todoSetMock) = GetMocks();
         var newTodo = new TodoItem { Title = "New Todo" };
+        var user = GetMockUser();
 
-        var result = await TodoHandlers.CreateTodo(newTodo, dbMock.Object);
+        var result = await TodoHandlers.CreateTodo(newTodo, dbMock.Object, user);
 
         var createdResult = Assert.IsType<Created<TodoItem>>(result);
         Assert.Equal("New Todo", createdResult.Value!.Title);
+        Assert.Equal("test-user-id", createdResult.Value!.UserId);
+        dbMock.Verify(m => m.SaveChangesAsync(default), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateTodo_AlwaysSetsUserIdToCurrentUser()
+    {
+        // Arrange
+        var (dbMock, _) = GetMocks();
+        var user = GetMockUser();
+        var newTodo = new TodoItem { Title = "New Todo", UserId = "malicious-id" }; // Setting to a different ID to see if it gets overridden
+
+        // Act
+        var result = await TodoHandlers.CreateTodo(newTodo, dbMock.Object, user);
+
+        // Assert
+        var createdResult = Assert.IsType<Created<TodoItem>>(result);
+        Assert.Equal("test-user-id", createdResult.Value!.UserId); // Should be overridden by the claim
         dbMock.Verify(m => m.SaveChangesAsync(default), Times.Once);
     }
 
     [Fact]
     public async Task UpdateTodo_ModifiesExistingTodo()
     {
-        var todo = new TodoItem { Id = 1, Title = "Old Title", Description = "Old Description" };
+        var todo = new TodoItem { Id = 1, Title = "Old Title", Description = "Old Description", UserId = "test-user-id" };
         var (dbMock, todoSetMock) = GetMocks(new List<TodoItem> { todo });
-        
-        // FindAsync is tricky with mocks, but MockQueryable helper usually setup it if used correctly.
-        // If not, we can setup it manually.
-        todoSetMock.Setup(m => m.FindAsync(1)).ReturnsAsync(todo);
+        var user = GetMockUser();
 
         var updateInfo = new TodoItem { Title = "New Title", Description = "New Description", IsCompleted = true };
-        var result = await TodoHandlers.UpdateTodo(1, updateInfo, dbMock.Object);
+        var result = await TodoHandlers.UpdateTodo(1, updateInfo, dbMock.Object, user);
 
         Assert.IsType<NoContent>(result);
         Assert.Equal("New Title", todo.Title);
@@ -90,11 +117,11 @@ public class TodoHandlerTests
     [Fact]
     public async Task DeleteTodo_RemovesTodo()
     {
-        var todo = new TodoItem { Id = 1, Title = "To Delete" };
+        var todo = new TodoItem { Id = 1, Title = "To Delete", UserId = "test-user-id" };
         var (dbMock, todoSetMock) = GetMocks(new List<TodoItem> { todo });
-        todoSetMock.Setup(m => m.FindAsync(1)).ReturnsAsync(todo);
+        var user = GetMockUser();
 
-        var result = await TodoHandlers.DeleteTodo(todo.Id, dbMock.Object);
+        var result = await TodoHandlers.DeleteTodo(todo.Id, dbMock.Object, user);
 
         Assert.IsType<NoContent>(result);
         todoSetMock.Verify(m => m.Remove(It.IsAny<TodoItem>()), Times.Once);

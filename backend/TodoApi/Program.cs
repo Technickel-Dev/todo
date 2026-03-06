@@ -1,7 +1,8 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using TodoApi.Data;
-using TodoApi.Models;
 using TodoApi.Handlers;
+using TodoApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,8 +13,15 @@ builder.Services.AddValidation();
 
 // Configure SQLite
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=todo.db";
+
+// Configure Identity
+builder.Services.AddAuthorizationBuilder();
 builder.Services.AddDbContext<TodoDbContext>(options =>
     options.UseSqlite(connectionString));
+
+builder.Services.AddIdentityApiEndpoints<IdentityUser>()
+    .AddEntityFrameworkStores<TodoDbContext>();
+
 
 // Add CORS to allow frontend access (if we were going to use a different domain)
 builder.Services.AddCors(options =>
@@ -44,10 +52,16 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors();
+app.UseAuthentication();
+app.UseAuthorization();
+
+// --- Minimal API Endpoints for Auth ---
+
+app.MapIdentityApi<IdentityUser>();
 
 // --- Minimal API Endpoints for Todos ---
 
-var todos = app.MapGroup("/todos");
+var todos = app.MapGroup("/todos").RequireAuthorization();
 
 todos.MapGet("/", TodoHandlers.GetAllTodos);
 todos.MapGet("/{id:int}", TodoHandlers.GetTodoById);
